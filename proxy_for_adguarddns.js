@@ -8,33 +8,41 @@ require("dotenv").config();
 const app = express();
 app.use(cors());
 
-const PORT = 3786; // Choisir un port libre
+const PORT = 3786;
 const ADGUARD_SERV_URL = "https://api.adguard-dns.io/oapi/v1/dns_servers";
 const ADGUARD_ACCOUNT_URL = "https://api.adguard-dns.io/oapi/v1/account/limits";
 
-let TOKEN = process.env.ADGUARD_TOKEN; // Stockage dynamique du token
+let TOKEN = process.env.ADGUARD_TOKEN;
+let REFRESH_TOKEN = process.env.ADGUARD_REFRESH_TOKEN;
 
 async function refreshToken() {
     try {
         const response = await axios.post("https://api.adguard-dns.io/oapi/v1/oauth_token", new URLSearchParams({
-            username: process.env.ADGUARD_USERNAME,
-            password: process.env.ADGUARD_PASSWORD
+            grant_type: "refresh_token",
+            refresh_token: REFRESH_TOKEN
         }), {
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         });
 
-        const newToken = response.data.access_token;
-        console.log("✅ Nouveau token récupéré :", newToken);
+        const newAccessToken = response.data.access_token;
+        const newRefreshToken = response.data.refresh_token;
 
-        // Mise à jour du fichier .env
+        console.log("✅ Nouveau token récupéré :", newAccessToken);
+
+        // Mise à jour du .env
         const envPath = path.resolve(__dirname, ".env");
-        const envContent = fs.readFileSync(envPath, "utf-8");
-        const updatedEnv = envContent.replace(/ADGUARD_TOKEN=.*/, `ADGUARD_TOKEN=${newToken}`);
-        fs.writeFileSync(envPath, updatedEnv);
+        let envContent = fs.readFileSync(envPath, "utf-8");
 
-        // Mise à jour du token en mémoire
-        TOKEN = newToken;
-        return newToken;
+        envContent = envContent
+            .replace(/ADGUARD_TOKEN=.*/, `ADGUARD_TOKEN=${newAccessToken}`)
+            .replace(/ADGUARD_REFRESH_TOKEN=.*/, `ADGUARD_REFRESH_TOKEN=${newRefreshToken}`);
+        fs.writeFileSync(envPath, envContent);
+
+        // Mise à jour en mémoire
+        TOKEN = newAccessToken;
+        REFRESH_TOKEN = newRefreshToken;
+
+        return newAccessToken;
     } catch (error) {
         console.error("❌ Erreur lors du renouvellement du token :", error.response?.data || error.message);
         return null;
@@ -56,13 +64,12 @@ async function fetchAdGuardData() {
         if (error.response && error.response.status === 401) {
             console.log("⚠ Token expiré, génération d'un nouveau...");
             const newToken = await refreshToken();
-            if (newToken) return fetchAdGuardData(); // Réessaye avec le nouveau token
+            if (newToken) return fetchAdGuardData();
         }
         throw error;
     }
 }
 
-// Endpoint API
 app.get("/adguard-dns", async (req, res) => {
     try {
         const data = await fetchAdGuardData();
