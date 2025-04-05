@@ -12,7 +12,8 @@
 
 3. In the exemple.env file change the following:
 
-`ADGUARD_TOKEN=yourtokenhere
+`
+ADGUARD_TOKEN=yourtokenhere
 ADGUARD_REFRESH_TOKEN=refreshtokenhere
 `
 
@@ -29,6 +30,7 @@ You can get the token and the refreshtoken via the following command: (more info
 5. Run the proxy:
 
 Node method:
+
 `node proxy_for_adguarddns.js`
 
 Docker method:
