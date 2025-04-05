@@ -1,4 +1,8 @@
-# proxy_adguarddns_homepage
+# 🌐 proxy_adguarddns_homepage
+
+## Description:
+
+A small local proxy to expose AdGuard DNS data and display it in a Homepage interface.
 
 ### Configurations:
 
@@ -12,10 +16,8 @@
 
 3. In the exemple.env file change the following:
 
-`
-ADGUARD_TOKEN=yourtokenhere
-ADGUARD_REFRESH_TOKEN=refreshtokenhere
-`
+`ADGUARD_TOKEN=yourtokenhere
+ADGUARD_REFRESH_TOKEN=refreshtokenhere`
 
 You can get the token and the refreshtoken via the following command: (more informations here: https://adguard-dns.io/kb/private-dns/api/overview/)
 
